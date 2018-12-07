@@ -6,11 +6,7 @@ import numpy as np
 
 batch_size = 32
 num_batchs = 100
-class_num = 10
 
-keep_prob = tf.placeholder(tf.float32, None,name='keep_prob')
-x = tf.placeholder(tf.float32, [None, 224, 224, 3],name='x')
-y_ = tf.placeholder(tf.float32, [None, class_num],name='y_')
 
 # 输出网络结构尺寸
 def print_activations(t):
@@ -89,35 +85,7 @@ def inference(image):
                            padding='VALID', name='pool5')
     print_activations(pool5)
 
-    with tf.name_scope('fc1') as scope:
-        flat = tf.reshape(pool5,[-1,6*6*256])
-        weights = tf.Variable(tf.truncated_normal([6*6*256,4096]),name='weight')
-        biases = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[4096]),
-                             trainable=True, name='biases')
-        fc1 = tf.nn.dropout(tf.nn.relu(tf.nn.xw_plus_b(flat,weights,biases))
-                            ,keep_prob=keep_prob,name=scope)
-        print_activations(fc1)
-        parameters += [weights, biases]
-
-    with tf.name_scope('fc2') as scope:
-        weights = tf.Variable(tf.truncated_normal([4096,4096]),name='weight')
-        biases = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[4096]),
-                             trainable=True, name='biases')
-        fc2 = tf.nn.dropout(tf.nn.relu(tf.nn.xw_plus_b(fc1,weights,biases))
-                            ,keep_prob=keep_prob,name=scope)
-        print_activations(fc2)
-        parameters += [weights, biases]
-
-    with tf.name_scope('fc3') as scope:
-        weights = tf.Variable(tf.truncated_normal([4096,1000]),name='weight')
-        biases = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[1000]),
-                             trainable=True, name='biases')
-        fc3 = tf.nn.dropout(tf.nn.relu(tf.nn.xw_plus_b(fc2,weights,biases))
-                            ,keep_prob=keep_prob,name=scope)
-        print_activations(fc3)
-        parameters += [weights, biases]
-
-    return fc3, parameters
+    return pool5, parameters
 
 
 def time_tensorflow_run(session, target, info_string):
@@ -127,7 +95,7 @@ def time_tensorflow_run(session, target, info_string):
 
     for i in range(num_batchs + num_steps_burn_in):
         start_time = time.time()
-        _ = session.run(target,feed_dict={keep_prob:0.5})
+        _ = session.run(target)
         duration = time.time() - start_time
         if i >= num_steps_burn_in:
             if not i % 10:
@@ -142,23 +110,23 @@ def time_tensorflow_run(session, target, info_string):
           (datetime.now(), info_string, num_batchs, mn, sd))
 
 def run_benchmark():
-    # with tf.Graph().as_default():
-    image_size = 224
-    images = tf.Variable(tf.random_normal([batch_size,
-                                           image_size,
-                                           image_size,3],
-                                          dtype=tf.float32,
-                                          stddev=0.1))
-    fc3,parameters = inference(images)
+    with tf.Graph().as_default():
+        image_size = 224
+        images = tf.Variable(tf.random_normal([batch_size,
+                                               image_size,
+                                               image_size,3],
+                                              dtype=tf.float32,
+                                              stddev=0.1))
+        pool5,parameters = inference(images)
 
-    init = tf.global_variables_initializer()
-    sess = tf.Session()
-    sess.run(init)
+        init = tf.global_variables_initializer()
+        sess = tf.Session()
+        sess.run(init)
 
-    time_tensorflow_run(sess,fc3,'Forward')
+        time_tensorflow_run(sess,pool5,'Forward')
 
-    objective = tf.nn.l2_loss(fc3)
-    grad = tf.gradients(objective,parameters)
-    time_tensorflow_run(sess,grad,'Forward-backward')
+        objective = tf.nn.l2_loss(pool5)
+        grad = tf.gradients(objective,parameters)
+        time_tensorflow_run(sess,grad,'Forward-backward')
 
 run_benchmark()

@@ -102,6 +102,19 @@ def inference(image):
         classifier = tf.nn.xw_plus_b(fc3, weights, biases)
     return classifier
 
+def test(num):
+    for i in range(num):
+        images, labels = readdata.test()
+        images = np.reshape(images, [-1, 224, 224, 3])
+        feed_dict = {x: images, y_: labels, keep_prob: 0.5}
+        a = sess.run(pre_label, feed_dict)
+        # print(a, '\n\n', labels, '\n\n\n\n')
+        # input('next .....')
+        if i % 10 == 0:
+            loss_, acc_ = sess.run([loss, acc], feed_dict)
+            print('after %d setp, loss is %.3f,accuracy is %g' % (i, loss_, acc_))
+        sess.run(train_step, feed_dict)
+
 
 y = inference(x)
 pre_label=tf.argmax(y,1)
@@ -125,16 +138,3 @@ with tf.Session() as sess:
             print('after %d setp, loss is %.3f,accuracy is %g' % (i, loss_, acc_))
         sess.run(train_step, feed_dict)
 
-# aaa = -tf.reduce_sum(y_*tf.log(y+1e-10))
-#
-# sess = tf.InteractiveSession()
-# sess.run(init)
-# images,labels = readdata.batch(batch_size)
-# images = np.reshape(images,[-1,224,224,3])
-#
-# feed_dict = {x: images, y_: labels, keep_prob: 0.5}
-# a = tf.nn.softmax_cross_entropy_with_logits(labels = y_,logits=y)
-# aa = tf.reduce_mean(a)
-# cross_entropy = -tf.reduce_sum(y_*tf.log(y+1e-10))
-#
-# print(aa.eval(feed_dict))

@@ -83,7 +83,7 @@ def inference(image):
         flat = tf.reshape(pool5, [-1, 6 * 6 * 256])
         weights = tf.Variable(tf.truncated_normal([6 * 6 * 256, 4096], dtype=tf.float32,
                                                   stddev=0.01), name='weight')
-        biases = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[4096]),
+        biases = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[4096]),
                              trainable=True, name='biases')
         fc1 = tf.nn.dropout(tf.nn.relu(tf.nn.xw_plus_b(flat, weights, biases))
                             , keep_prob=keep_prob, name=scope)
@@ -91,7 +91,7 @@ def inference(image):
     with tf.name_scope('fc2') as scope:
         weights = tf.Variable(tf.truncated_normal([4096, 4096], dtype=tf.float32,
                                                   stddev=0.01), name='weight')
-        biases = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[4096]),
+        biases = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[4096]),
                              trainable=True, name='biases')
         fc2 = tf.nn.dropout(tf.nn.relu(tf.nn.xw_plus_b(fc1, weights, biases))
                             , keep_prob=keep_prob, name=scope)
@@ -99,7 +99,7 @@ def inference(image):
     with tf.name_scope('fc3') as scope:
         weights = tf.Variable(tf.truncated_normal([4096, 1000], dtype=tf.float32,
                                                   stddev=0.01), name='weight')
-        biases = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[1000]),
+        biases = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[1000]),
                              trainable=True, name='biases')
         fc3 = tf.nn.dropout(tf.nn.relu(tf.nn.xw_plus_b(fc2, weights, biases))
                             , keep_prob=keep_prob, name=scope)
@@ -107,7 +107,7 @@ def inference(image):
     with tf.name_scope('classifier') as scope:
         weights = tf.Variable(tf.truncated_normal([1000, class_num], dtype=tf.float32,
                                                   stddev=0.01), name='weight')
-        biases = tf.Variable(tf.constant(0.1, dtype=tf.float32, shape=[class_num]),
+        biases = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[class_num]),
                              trainable=True, name='biases')
         classifier = tf.nn.xw_plus_b(fc3, weights, biases,name=scope)
     return classifier

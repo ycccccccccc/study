@@ -17,6 +17,62 @@ num_batchs = 100
 # x = tf.placeholder(tf.float32, [None, 224, 224, 3], name='x')
 # y_ = tf.placeholder(tf.float32, [None, class_num], name='y_')
 
+slim = tf.contrib.slim
+
+def trunc_normal(stddtv):
+    return tf.truncated_normal_initializer(0.0,stddtv)
+
+def inception_v3_arg_scope(weight_decay = 0.00004,
+                           stddev = 0.1,
+                           batch_norm_var_clooection = 'moving_vars'):
+    batch_norm_params = {
+        'decay':0.9997,
+        'epsilon':0.001,
+        'updates_collections':tf.GraphKeys.UPDATE_OPS,
+        'variables_collections':{
+            'beta':None,
+            'gamma':None,
+            'moving_mean':[batch_norm_var_clooection],
+            'moving_variance':[batch_norm_var_clooection],
+        }
+    }
+
+    with slim.arg_scope([slim.conv2d,slim.fully_connected],
+                        weight_regularizer = slim.l2_regularizer(weight_decay)):
+        with slim.arg_scope(
+            [slim.conv2d],
+            weights_initializer = tf.truncated_normal_initializer(stddev=stddev),
+            activation_fn = tf.nn.relu,
+            normalizer_fn =slim.batch_norm,
+            normalizer_params = batch_norm_params) as sc:
+            return sc
+
+def inception_v3_base(inputs,scope = None):
+    end_points = {}
+
+    with tf.variable_scope(scope,'InceptionV3',[inputs]):
+        with slim.arg_scope([slim.conv2d,slim.max_pool2d,slim.avg_pool2d],
+                            stride = 1,padding = 'VALID'):
+            net = slim.conv2d(inputs,32,[3,3],strides=2,scope = 'Conv2d_1a_3x3')
+            net = slim.conv2d(net,32,[3,3],scope = 'Convd_2a_3x3')
+            net = slim.conv2d(net,64,[3,3],padding='SAME',scope = 'Convd_2b_3x3')
+            net = slim.max_pool2d(net,[3,3],stride = 2,scope = 'MaxPool_3a_3x3')
+            net = slim.conv2d(net, 80, [1,1], scope='Convd_3b_1x1')
+            net = slim.conv2d(net, 192, [3, 3], scope='Convd_4a_3x3')
+            net = slim.max_pool2d(net,[3, 3], stride=2, scope='MaxPool_5a_3x3')
+
+        with slim.arg_scope([slim.conv2d,slim.max_pool2d,slim.avg_pool2d],
+                            stride = 1,padding = 'SAME'):
+            with
+
+
+
+
+
+
+
+
+
 
 def conv_op(input_op, name, kh, kw, n_out, dh, dw, p):
     n_in = input_op.get_shape()[-1].value
@@ -55,63 +111,7 @@ def mpool_op(input_op,name,kh,kw,dh,dw):
                           padding='SAME',
                           name=name)
 
-def inference_op(input_op,keep_prob):
-    p = []
 
-    conv1_1 = conv_op(input_op,name='conv1_1',kh = 3,kw = 3,n_out = 64,
-                      dh = 1,dw = 1,p = p)
-    conv1_2 = conv_op(conv1_1,name='conv1_2',kh = 3,kw = 3,n_out=64,
-                      dh = 1,dw = 1,p = p)
-    pool1 = mpool_op(conv1_2,name='pool1',kh=2,kw=2,dw=2,dh=2)
-
-
-    conv2_1 = conv_op(pool1, name='conv2_1', kh=3, kw=3, n_out=128,
-                      dh=1, dw=1, p=p)
-    conv2_2 = conv_op(conv2_1, name='conv2_2', kh=3, kw=3, n_out=128,
-                      dh=1, dw=1, p=p)
-    pool2 = mpool_op(conv2_2, name='pool2', kh=2, kw=2, dw=2, dh=2)
-
-
-    conv3_1 = conv_op(pool2, name='conv3_1', kh=3, kw=3, n_out=256,
-                     dh=1, dw=1, p=p)
-    conv3_2 = conv_op(conv3_1, name='conv3_2', kh=3, kw=3, n_out=256,
-                     dh=1, dw=1, p=p)
-    conv3_3 = conv_op(conv3_2, name='conv3_3', kh=3, kw=3, n_out=256,
-                     dh=1, dw=1, p=p)
-    pool3 = mpool_op(conv3_3, name='pool3', kh=2, kw=2, dw=2, dh=2)
-
-
-    conv4_1 = conv_op(pool3, name='conv4_1', kh=3, kw=3, n_out=512,
-                      dh=1, dw=1, p=p)
-    conv4_2 = conv_op(conv4_1, name='conv4_2', kh=3, kw=3, n_out=512,
-                      dh=1, dw=1, p=p)
-    conv4_3 = conv_op(conv4_2, name='conv4_3', kh=3, kw=3, n_out=512,
-                      dh=1, dw=1, p=p)
-    pool4 = mpool_op(conv4_3, name='pool4', kh=2, kw=2, dw=2, dh=2)
-
-    conv5_1 = conv_op(pool4, name='conv5_1', kh=3, kw=3, n_out=512,
-                      dh=1, dw=1, p=p)
-    conv5_2 = conv_op(conv5_1, name='conv5_2', kh=3, kw=3, n_out=512,
-                      dh=1, dw=1, p=p)
-    conv5_3 = conv_op(conv5_2, name='conv5_3', kh=3, kw=3, n_out=512,
-                      dh=1, dw=1, p=p)
-    pool5 = mpool_op(conv5_3, name='pool5', kh=2, kw=2, dw=2, dh=2)
-
-    shp = pool5.get_shape()
-    flattened_shape = shp[1].value*shp[2].value*shp[3].value
-    resh1 = tf.reshape(pool5,[-1,flattened_shape],name='resh1')
-
-    fc6 = fc_op(resh1,name='fc6',n_out=4096,p = p)
-    fc6_drop = tf.nn.dropout(fc6,keep_prob,name='fc6_drop')
-
-    fc7 = fc_op(fc6_drop,name='fc7',n_out=4096,p = p)
-    fc7_drop = tf.nn.dropout(fc7,keep_prob,name='fc7_drop')
-
-    fc8 = fc_op(fc7_drop,name='fc8',n_out=1000,p=p,last=True)
-    softmax = tf.nn.softmax(fc8)
-    predictions = tf.argmax(softmax,1)
-
-    return predictions,softmax,fc8,p
 
 def time_tensorflow_run(session, target, feed,info_string):
     num_steps_burn_in = 10

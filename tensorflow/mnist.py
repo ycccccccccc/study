@@ -38,7 +38,7 @@ def inception_v3_arg_scope(weight_decay = 0.00004,
     }
 
     with slim.arg_scope([slim.conv2d,slim.fully_connected],
-                        weight_regularizer = slim.l2_regularizer(weight_decay)):
+                        weights_regularizer = slim.l2_regularizer(weight_decay)):
         with slim.arg_scope(
             [slim.conv2d],
             weights_initializer = tf.truncated_normal_initializer(stddev=stddev),
@@ -53,7 +53,7 @@ def inception_v3_base(inputs,scope = None):
     with tf.variable_scope(scope,'InceptionV3',[inputs]):
         with slim.arg_scope([slim.conv2d,slim.max_pool2d,slim.avg_pool2d],
                             stride = 1,padding = 'VALID'):
-            net = slim.conv2d(inputs,32,[3,3],strides=2,scope = 'Conv2d_1a_3x3')
+            net = slim.conv2d(inputs,32,[3,3],stride=2,scope = 'Conv2d_1a_3x3')
             net = slim.conv2d(net,32,[3,3],scope = 'Convd_2a_3x3')
             net = slim.conv2d(net,64,[3,3],padding='SAME',scope = 'Convd_2b_3x3')
             net = slim.max_pool2d(net,[3,3],stride = 2,scope = 'MaxPool_3a_3x3')
@@ -111,15 +111,15 @@ def inception_v3_base(inputs,scope = None):
             with tf.variable_scope('Mixed_6a'):
                 with tf.variable_scope('Branch_0'):
                     branch_0 = slim.conv2d(net,384,[3,3],stride = 2,
-                                           scope = 'Conv2d_0a_3x3')
+                                           padding = 'VALID',scope = 'Conv2d_0a_3x3')
                 with tf.variable_scope('Branch_1'):
                     branch_1 = slim.conv2d(net,64,[1,1],scope = 'Conv2d_0a_1x1')
                     branch_1 = slim.conv2d(branch_1,96,[3,3],scope = 'Conv2d_0b_3x3')
                     branch_1 = slim.conv2d(branch_1,96,[3,3],stride = 2,
                                            padding = 'VALID',scope = 'Conv2d_0c_3x3')
                 with tf.variable_scope('Branch_2'):
-                    branch_3 = slim.max_pool2d(net,[3,3],stride = 2,
-                                               padding = 'VALID',scope = 'MaxPool_0a_3x3')
+                    branch_2 = slim.max_pool2d(net,[3,3],stride = 2,
+                                               padding = 'VALID',scope = 'MaxPool_0d_3x3')
                 net = tf.concat([branch_0,branch_1,branch_2],3)
 
             with tf.variable_scope('Mixed_6b'):
@@ -208,7 +208,7 @@ def inception_v3_base(inputs,scope = None):
                     branch_1 = slim.conv2d(branch_1, 192, [3,3], stride=2,
                                            padding='VALID', scope='Conv2d_0d_3x3')
                 with tf.variable_scope('Branch_2'):
-                    branch_3 = slim.max_pool2d(net,[3,3],stride = 2,
+                    branch_2 = slim.max_pool2d(net,[3,3],stride = 2,
                                                padding = 'VALID',scope = 'MaxPool_0a_3x3')
                 net = tf.concat([branch_0,branch_1,branch_2],3)
 
@@ -218,13 +218,13 @@ def inception_v3_base(inputs,scope = None):
                 with tf.variable_scope('Branch_1'):
                     branch_1 = slim.conv2d(net,384,[1,3],scope = 'Conv2d_0a_1x1')
                     branch_1 = tf.concat([
-                        slim.conv2d(branch_1,384,[1,3],scope = 'Conv2d_0b_1x3')
+                        slim.conv2d(branch_1,384,[1,3],scope = 'Conv2d_0b_1x3'),
                         slim.conv2d(branch_1, 384, [3,1], scope='Conv2d_0b_3x1')],3)
                 with tf.variable_scope('Branch_2'):
                     branch_2 = slim.conv2d(net,448,[1,1],scope = 'Conv2d_0a_1x1')
                     branch_2 = slim.conv2d(branch_2,384,[3,3],scope = 'Conv2d_0b_3x3')
                     branch_2 = tf.concat([
-                        slim.conv2d(branch_2, 384, [1, 3], scope='Conv2d_0c_1x3')
+                        slim.conv2d(branch_2, 384, [1, 3], scope='Conv2d_0c_1x3'),
                         slim.conv2d(branch_2, 384, [3, 1], scope='Conv2d_0c_3x1')], 3)
                 with tf.variable_scope('Branch_3'):
                     branch_3 = slim.avg_pool2d(net,[3,3],scope = 'AvgPool_0a_3x3')
@@ -237,13 +237,13 @@ def inception_v3_base(inputs,scope = None):
                 with tf.variable_scope('Branch_1'):
                     branch_1 = slim.conv2d(net,384,[1,3],scope = 'Conv2d_0a_1x1')
                     branch_1 = tf.concat([
-                        slim.conv2d(branch_1,384,[1,3],scope = 'Conv2d_0b_1x3')
+                        slim.conv2d(branch_1,384,[1,3],scope = 'Conv2d_0b_1x3'),
                         slim.conv2d(branch_1, 384, [3,1], scope='Conv2d_0b_3x1')],3)
                 with tf.variable_scope('Branch_2'):
                     branch_2 = slim.conv2d(net,448,[1,1],scope = 'Conv2d_0a_1x1')
                     branch_2 = slim.conv2d(branch_2,384,[3,3],scope = 'Conv2d_0b_3x3')
                     branch_2 = tf.concat([
-                        slim.conv2d(branch_2, 384, [1, 3], scope='Conv2d_0c_1x3')
+                        slim.conv2d(branch_2, 384, [1, 3], scope='Conv2d_0c_1x3'),
                         slim.conv2d(branch_2, 384, [3, 1], scope='Conv2d_0c_3x1')], 3)
                 with tf.variable_scope('Branch_3'):
                     branch_3 = slim.avg_pool2d(net,[3,3],scope = 'AvgPool_0a_3x3')
@@ -289,7 +289,7 @@ def inception_v3(inputs,
                     net = slim.dropout(net,keep_prob = dropout_keep_prob,
                                        scope = 'Dropout_0b')
                     end_points['PreLogits'] = net
-                    logits = slim.conv2d(net,num_classes,[1,1],activation_fc = None,
+                    logits = slim.conv2d(net,num_classes,[1,1],activation_fn = None,
                                          normalizer_fn = None,scope = 'Conbv2d_0c_1x1')
                     if spatial_squeeze:
                         logits = tf.squeeze(logits,[1,2],name = 'SpatialSqueeze')
@@ -301,14 +301,14 @@ def inception_v3(inputs,
 
 
 
-def time_tensorflow_run(session, target, feed,info_string):
+def time_tensorflow_run(session, target,info_string):
     num_steps_burn_in = 10
     total_duration = 0.0
     toatl_duration_squared = 0.0
 
     for i in range(num_batchs + num_steps_burn_in):
         start_time = time.time()
-        _ = session.run(target,feed_dict = feed)
+        _ = session.run(target)
         duration = time.time() - start_time
         if i >= num_steps_burn_in:
             if not i % 10:

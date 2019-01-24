@@ -9,8 +9,8 @@ import shutil
 # import cv2 as cv
 from keras.preprocessing import image
 
-ddir = './classed_114/'
-ssdir = './tmp/'
+ddir = './tmp_train/'
+ssdir = './tmp_aug/'
 
 RANGE_DIR = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'S', 'E', 'P', 'H', 'M', 'B', 'D', 'J', 'I', 'X', 'Z', 'T', 'A', 'K', 'V',
              'U', 'Y', 'C', 'L', 'F', 'R']
@@ -45,6 +45,8 @@ def aug(method):
                                                save_prefix=method, target_size=(32, 32))
         for j in range(len1):
             gen_data.next()
+
+mkd()
 
 for i in arg:
     aug(i)

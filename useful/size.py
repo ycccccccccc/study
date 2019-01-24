@@ -2,8 +2,8 @@ import os
 from PIL import Image
 import numpy as np
 
-dir = './1.3/'
-ddir = './tmp/'
+dir = './classed/'
+ddir = './new/'
 
 
 # # 统计中位数
@@ -22,5 +22,5 @@ ddir = './tmp/'
 for i in os.listdir(dir):
     for j in os.listdir(dir+i):
         a = Image.open(dir+i+'/'+j)
-        a = a.resize((28,28),Image.ANTIALIAS)
+        a = a.resize((71,134),Image.ANTIALIAS)
         a.save(ddir+j)

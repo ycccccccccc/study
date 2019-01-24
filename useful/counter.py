@@ -1,6 +1,6 @@
 import os
 import numpy as np
-dir = './tmp/'
+dir = './tmp_classed/'
 list = os.listdir(dir)
 
 num = np.zeros(255)

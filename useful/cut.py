@@ -2,7 +2,7 @@ import os
 import numpy as np
 from PIL import Image
 
-sdir = './cut_338_1/'#来源
+sdir = './cut_all/'#来源
 ddir = './tmp/'#目的
 
 list = os.listdir(sdir)

@@ -2,11 +2,13 @@ import os
 import numpy as np
 from PIL import Image
 
-sdir = './cut_100/'#来源
-ddir = './tmp/'#目的
+sdir = './cut_114_2_ab/'#来源
+ddir = './tmp/5/'#目的
 
 list = os.listdir(sdir)
 
+if not os.path.exists(ddir):
+    os.mkdir(ddir)
 count = 0
 for i in list:
     if 'jpg' in i:
@@ -15,8 +17,7 @@ for i in list:
             index = i.find('.')
         img = np.array(Image.open(sdir+i))
         len = img.shape[1]
-        aaaa = 3/20.0
-        ex = int(len / index * aaaa)
+        ex = int(len / index / 3)
         for j in range(index):
             tmp = img[:,int(max(0,len * j/index-ex)):int(min(len,len * (j+1)/index+ex))]
             if j==0:
